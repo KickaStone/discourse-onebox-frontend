@@ -64,7 +64,7 @@ export default apiInitializer("0.11.1", api => {
         onebox_div.replaceChildren(biliframe);
 
         // insert a button to open the video in bilibili client
-        let btn = document.createElement('div');
+        let btn = document.createElement('button');
         btn.classList.add('btn', 'onebox-bilibili-button');
         btn.textContent = '客户端观看';
         btn.addEventListener('click', () => {
