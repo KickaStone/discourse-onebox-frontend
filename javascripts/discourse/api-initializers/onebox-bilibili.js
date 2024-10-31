@@ -3,19 +3,30 @@ import I18n from "I18n";
 
 export default apiInitializer("0.11.1", api => {
 
+    // get the video id from the url
+    const getVideoID = (src) => {
+        const BV_reg = /bv([a-zA-Z0-9]+)/i;
+        const AV_reg = /av([a-zA-Z0-9]+)/i;
+        if (BV_reg.test(src)) {
+            return 'BV' + src.match(BV_reg)[1];
+        } else if (AV_reg.test(src)) {
+            return 'AV' + src.match(AV_reg)[1];
+        }
+        return null;
+    };
+
+
     const getIframeUrl = (src) => {
         const url = new URL(src, document.baseURI);
         const iframeUrl = new URL('//player.bilibili.com/player.html', document.baseURI);
         if (url.hostname === 'player.bilibili.com') {
             url.searchParams.forEach((v, k) => iframeUrl.searchParams.set(k, v));
         } else {
-            const BV_reg = /bv([a-zA-Z0-9]+)/i;
-            const AV_reg = /av([a-zA-Z0-9]+)/i;
-            if (BV_reg.test(url.pathname)) {
-                iframeUrl.searchParams.set('bvid', 'BV' + url.pathname.match(BV_reg)[1]);
-            }
-            if (AV_reg.test(url.pathname)) {
-                iframeUrl.searchParams.set('avid', url.pathname.match(AV_reg)[1]);
+            const videoID = getVideoID(url.pathname);
+            if (videoID.startsWith('BV')) {
+                iframeUrl.searchParams.set('bvid', videoID);
+            } else if (videoID.startsWith('AV')) {
+                iframeUrl.searchParams.set('avid', videoID);
             }
         }
         iframeUrl.searchParams.set('autoplay', 0);
@@ -51,6 +62,16 @@ export default apiInitializer("0.11.1", api => {
         onebox_div.setAttribute('data-onebox-src', src);
         const biliframe = decorateIframe(getIframeUrl(src));
         onebox_div.replaceChildren(biliframe);
+
+        // insert a button to open the video in bilibili client
+        let btn = document.createElement('div');
+        btn.classList.add('btn', 'onebox-bilibili-button');
+        btn.textContent = '客户端观看';
+        btn.addEventListener('click', () => {
+            window.location.href = "bilibili://video/" + getVideoID(src);
+        });
+
+        onebox_div.appendChild(btn);
         return onebox_div;
     };
 
